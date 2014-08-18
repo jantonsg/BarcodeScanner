@@ -1,4 +1,4 @@
-/*
+cordova.define("com.phonegap.plugins.barcodescanner.BarcodeScannerProxy", function(require, exports, module) { /*
  * Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -36,18 +36,39 @@ module.exports = {
 
             // Create fullscreen preview
             capturePreview = document.createElement("video");
-            capturePreview.style.cssText = "position: absolute; left: 0; top: 0; width: 100%; height: 100%";
+            capturePreview.style.cssText = "position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index:3";
 
             // Create cancel button
             captureCancelButton = document.createElement("button");
             captureCancelButton.innerText = "Cancel";
-            captureCancelButton.style.cssText = "position: absolute; right: 0; bottom: 0; display: block; margin: 20px";
+            captureCancelButton.style.cssText = "position: absolute; right: 0; bottom: 0; display: block; margin: 20px; z-index:4";
             captureCancelButton.addEventListener('click', cancelPreview, false);
 
-            capture = new Windows.Media.Capture.MediaCapture();
+            //capture = new Windows.Media.Capture.MediaCapture();
 
-            captureSettings = new Windows.Media.Capture.MediaCaptureInitializationSettings();
-            captureSettings.streamingCaptureMode = Windows.Media.Capture.StreamingCaptureMode.video;
+            //captureSettings = new Windows.Media.Capture.MediaCaptureInitializationSettings();
+            //captureSettings.streamingCaptureMode = Windows.Media.Capture.StreamingCaptureMode.video;
+
+            Windows.Devices.Enumeration.DeviceInformation.findAllAsync(Windows.Devices.Enumeration.DeviceClass.videoCapture)
+            .done(function (devices) {
+                if (devices.length > 0) {
+                    devices.forEach(function (currDev) {
+                        if (currDev.enclosureLocation.panel && currDev.enclosureLocation.panel == Windows.Devices.Enumeration.Panel.front) {
+                            defaultDeviceId = currDev.id;
+
+                            capture = new Windows.Media.Capture.MediaCapture();
+                            captureSettings = new Windows.Media.Capture.MediaCaptureInitializationSettings();
+                            captureSettings.streamingCaptureMode = Windows.Media.Capture.StreamingCaptureMode.video;
+                            captureSettings.videoDeviceId = defaultDeviceId;
+
+                            startPreview();
+                        }
+                    })
+                } else {
+                    console.log("There are no devices available");
+                    success({ text: "There are no devices available", format: null, cancelled: true });
+                }
+            });
         }
 
         /**
@@ -111,7 +132,7 @@ module.exports = {
         
         try {
             createPreview();
-            startPreview();
+            //startPreview();
         } catch (ex) {
             fail(ex);
         }
@@ -128,3 +149,5 @@ module.exports = {
     }
 };
 require("cordova/windows8/commandProxy").add("BarcodeScanner", module.exports);
+
+});
